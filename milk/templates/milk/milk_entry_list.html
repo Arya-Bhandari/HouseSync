@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+{% block title %}Daily Milk Logs - HouseSync{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <!-- Title Row -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600">
+                        <i class="fa-solid fa-glass-water text-sm"></i>
+                    </span>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Milk Entries</h1>
+                </div>
+                <p class="text-sm text-slate-500 mt-1">Track daily cow and buffalo milk records with automated billing.</p>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'calculate_milk_bill' %}?year={{ active_year }}&month={{ active_month }}"
+                   class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-semibold transition duration-150 shadow-xs">
+                    <i class="fa-solid fa-file-invoice mr-2 text-slate-400"></i>View Bill
+                </a>
+                <button type="button" onclick="openEntryModal()"
+                        class="inline-flex items-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold transition duration-150 shadow-md shadow-blue-500/25 cursor-pointer">
+                    <i class="fa-solid fa-plus mr-2"></i>Add New Entry
+                </button>
+            </div>
+        </div>
+
+        <!-- Month Filter Bar -->
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+            <!-- Prev month -->
+            <a href="?year={{ prev_year }}&month={{ prev_month }}"
+               class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition duration-150"
+               title="Previous month">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+            </a>
+
+            <!-- Month / Year picker -->
+            <form method="GET" id="monthFilterForm" class="flex-1 sm:flex-none">
+                <select name="month" id="monthSelect"
+                        class="w-full sm:w-auto appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer pr-8"
+                        style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path fill=%22%2364748b%22 d=%22M2 5l6 6 6-6%22 stroke=%22%2364748b%22 stroke-width=%221.5%22 fill=%22none%22/></svg>'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 12px;">
+                    {% for opt in month_options %}
+                    <option value="{{ opt.month }}"
+                            data-year="{{ opt.year }}"
+                            {% if opt.active %}selected{% endif %}>
+                        {{ opt.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="year" id="yearHidden" value="{{ active_year }}">
+            </form>
+
+            <!-- Next month (disabled if on current month) -->
+            {% if is_current_month %}
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
+                  title="This is the current month">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </span>
+            {% else %}
+            <a href="?year={{ next_year }}&month={{ next_month }}"
+               class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition duration-150"
+               title="Next month">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </a>
+            {% endif %}
+
+            <!-- Active month badge -->
+            <span class="ml-auto text-xs text-slate-500 font-medium hidden sm:block">
+                Showing <span class="text-slate-800 font-semibold">{{ active_month_label }}</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Entries Table Container -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-base font-semibold text-slate-800">
+                Records for <span class="text-blue-600">{{ active_month_label }}</span>
+            </h2>
+            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                {{ entries|length }} day{{ entries|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-left">
+                <thead class="bg-slate-50/75">
+                    <tr>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cow Milk</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Buffalo Milk</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Note</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Logged By</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for entry in entries %}
+                    <tr class="hover:bg-slate-50/60 transition duration-150">
+                        <td class="py-4 px-6 text-sm font-medium text-slate-900 whitespace-nowrap">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-regular fa-calendar text-slate-400 text-xs"></i>
+                                <span>{{ entry.date|date:"D, d M Y" }}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm whitespace-nowrap">
+                            {% if entry.cow_qty %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                                    <i class="fa-solid fa-check mr-1.5 text-[10px]"></i>{{ entry.cow_qty }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-400">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-sm whitespace-nowrap">
+                            {% if entry.buffalo_qty %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
+                                    <i class="fa-solid fa-check mr-1.5 text-[10px]"></i>{{ entry.buffalo_qty }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-400">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-600">
+                            {% if entry.note %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs bg-amber-50 text-amber-900 border border-amber-200/80 font-medium">
+                                    <i class="fa-regular fa-note-sticky mr-1.5 text-amber-500"></i>{{ entry.note }}
+                                </span>
+                            {% else %}
+                                <span class="text-xs text-slate-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
+                            <div class="flex items-center space-x-1.5">
+                                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-600 font-bold">
+                                    {{ entry.logged_by|first|upper }}
+                                </div>
+                                <span class="text-xs font-medium text-slate-600">{{ entry.logged_by }}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm whitespace-nowrap">
+                            <button
+                                type="button"
+                                data-date="{{ entry.date|date:'Y-m-d' }}"
+                                data-cow="{{ entry.cow_qty|default:'' }}"
+                                data-buffalo="{{ entry.buffalo_qty|default:'' }}"
+                                data-note="{{ entry.note|default:'' }}"
+                                onclick="handleUpdateClick(this)"
+                                class="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-xs font-semibold border border-slate-200 hover:border-blue-200 transition duration-150 cursor-pointer gap-1.5"
+                            >
+                                <i class="fa-solid fa-pen-to-square text-[11px]"></i> Update
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-12 px-6 text-center">
+                            <div class="max-w-xs mx-auto text-center">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400 mb-3">
+                                    <i class="fa-solid fa-clipboard-list text-xl"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold text-slate-800">No entries for {{ active_month_label }}</h3>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    Try a different month or add a new entry above.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- ── Entry Modal ───────────────────────────────────────────────────────── -->
+<div id="entryModal" data-has-errors="{% if form.errors or form.non_field_errors %}true{% else %}false{% endif %}"
+     style="display: none; position: fixed; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; margin: 0 !important; z-index: 9999; align-items: center; justify-content: center; background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);"
+     class="p-4 m-0">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md mx-auto p-6 relative transform transition-all">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
+            <div class="flex items-center space-x-2.5">
+                <div id="modalIconWrapper" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <i id="modalIcon" class="fa-solid fa-plus text-sm"></i>
+                </div>
+                <div>
+                    <h2 id="modalTitle" class="text-lg font-bold text-slate-900 leading-tight">Add Milk Entry</h2>
+                    <p id="modalSubtitle" class="text-xs text-slate-500">Add or update entries for this date.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeEntryModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'add_milk_entry' %}" class="space-y-4">
+            {% csrf_token %}
+            <!-- Preserve the active month filter so we return to the same month after save -->
+            <input type="hidden" name="next_year"  value="{{ active_year }}">
+            <input type="hidden" name="next_month" value="{{ active_month }}">
+
+            {% if form.non_field_errors %}
+            <div class="p-3 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-200 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
+                <span>{{ form.non_field_errors }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Date Input -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5" for="{{ form.date.id_for_label }}">
+                    <i class="fa-regular fa-calendar mr-1 text-slate-400"></i>Date
+                </label>
+                {{ form.date }}
+                {% if form.date.errors %}
+                <p class="text-xs text-rose-600 mt-1">{{ form.date.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Two Columns for Cow and Buffalo -->
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <!-- Cow Milk -->
+                <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+                    <label class="block text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1.5" for="{{ form.cow_quantity.id_for_label }}">
+                        <i class="fa-solid fa-cow mr-1 text-emerald-600"></i>Cow Milk
+                    </label>
+                    {{ form.cow_quantity }}
+                    {% if form.cow_quantity.errors %}
+                    <p class="text-xs text-rose-600 mt-1">{{ form.cow_quantity.errors.0 }}</p>
+                    {% endif %}
+                    <label id="clearCowLabel" class="hidden mt-2 flex items-center gap-1.5 cursor-pointer group">
+                        <input type="checkbox" name="clear_cow" id="id_clear_cow"
+                               class="rounded border-slate-300 text-rose-500 focus:ring-rose-400 cursor-pointer"
+                               onchange="handleClearToggle('cow')">
+                        <span class="text-xs text-rose-600 font-medium group-hover:text-rose-700">Clear entry</span>
+                    </label>
+                </div>
+                <!-- Buffalo Milk -->
+                <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+                    <label class="block text-xs font-semibold text-indigo-800 uppercase tracking-wider mb-1.5" for="{{ form.buffalo_quantity.id_for_label }}">
+                        <i class="fa-solid fa-shield mr-1 text-indigo-600"></i>Buffalo Milk
+                    </label>
+                    {{ form.buffalo_quantity }}
+                    {% if form.buffalo_quantity.errors %}
+                    <p class="text-xs text-rose-600 mt-1">{{ form.buffalo_quantity.errors.0 }}</p>
+                    {% endif %}
+                    <label id="clearBuffaloLabel" class="hidden mt-2 flex items-center gap-1.5 cursor-pointer group">
+                        <input type="checkbox" name="clear_buffalo" id="id_clear_buffalo"
+                               class="rounded border-slate-300 text-rose-500 focus:ring-rose-400 cursor-pointer"
+                               onchange="handleClearToggle('buffalo')">
+                        <span class="text-xs text-rose-600 font-medium group-hover:text-rose-700">Clear entry</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Note Input -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5" for="{{ form.note.id_for_label }}">
+                    <i class="fa-regular fa-comment-dots mr-1 text-slate-400"></i>Note (Optional)
+                </label>
+                {{ form.note }}
+                {% if form.note.errors %}
+                <p class="text-xs text-rose-600 mt-1">{{ form.note.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end space-x-2.5 pt-4 border-t border-slate-100 mt-6">
+                <button type="button" onclick="closeEntryModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition cursor-pointer">
+                    Cancel
+                </button>
+                <button id="modalSubmitBtn" type="submit" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/25 transition cursor-pointer">
+                    Save Entry
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // ── Month picker: sync hidden year when month dropdown changes ───────
+    document.getElementById('monthSelect').addEventListener('change', function () {
+        const selected = this.options[this.selectedIndex];
+        document.getElementById('yearHidden').value = selected.dataset.year;
+        document.getElementById('monthFilterForm').submit();
+    });
+
+    // ── Update button click handler ──────────────────────────────────────
+    function handleUpdateClick(btn) {
+        const date = btn.dataset.date || '';
+        const cow = btn.dataset.cow || '';
+        const buffalo = btn.dataset.buffalo || '';
+        const note = btn.dataset.note || '';
+        openUpdateModal(date, cow, buffalo, note);
+    }
+
+    // ── Modal helpers ────────────────────────────────────────────────────
+    function openEntryModal() {
+        setModalMode('add');
+        document.querySelector('#entryModal form').reset();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('{{ form.date.id_for_label }}').value = today;
+        document.getElementById('clearCowLabel').classList.add('hidden');
+        document.getElementById('clearBuffaloLabel').classList.add('hidden');
+        document.getElementById('id_clear_cow').checked = false;
+        document.getElementById('id_clear_buffalo').checked = false;
+        showModal();
+    }
+
+    function openUpdateModal(date, cowQty, buffaloQty, note) {
+        setModalMode('update');
+        document.getElementById('{{ form.date.id_for_label }}').value = date;
+        setSelectValue(document.getElementById('{{ form.cow_quantity.id_for_label }}'), cowQty);
+        setSelectValue(document.getElementById('{{ form.buffalo_quantity.id_for_label }}'), buffaloQty);
+        document.getElementById('{{ form.note.id_for_label }}').value = note;
+
+        const clearCow  = document.getElementById('clearCowLabel');
+        const clearBuff = document.getElementById('clearBuffaloLabel');
+        document.getElementById('id_clear_cow').checked = false;
+        document.getElementById('id_clear_buffalo').checked = false;
+        cowQty     ? clearCow.classList.remove('hidden')  : clearCow.classList.add('hidden');
+        buffaloQty ? clearBuff.classList.remove('hidden') : clearBuff.classList.add('hidden');
+        showModal();
+    }
+
+    function setSelectValue(selectEl, val) {
+        if (!selectEl) return;
+        const match = Array.from(selectEl.options).find(o => o.value === val);
+        selectEl.value = match ? val : '';
+    }
+
+    function handleClearToggle(type) {
+        const checkbox = document.getElementById('id_clear_' + type);
+        const selectId = type === 'cow'
+            ? '{{ form.cow_quantity.id_for_label }}'
+            : '{{ form.buffalo_quantity.id_for_label }}';
+        const sel = document.getElementById(selectId);
+        if (checkbox.checked) { sel.value = ''; sel.disabled = true; }
+        else { sel.disabled = false; }
+    }
+
+    function setModalMode(mode) {
+        const isUpdate = mode === 'update';
+        document.getElementById('modalTitle').textContent     = isUpdate ? 'Update Milk Entry' : 'Add Milk Entry';
+        document.getElementById('modalSubtitle').textContent  = isUpdate
+            ? 'Modify quantities, note, or clear an entry for this date.'
+            : 'Add quantities for one or both milk types.';
+        document.getElementById('modalIcon').className        = isUpdate
+            ? 'fa-solid fa-pen-to-square text-sm' : 'fa-solid fa-plus text-sm';
+        document.getElementById('modalIconWrapper').className = isUpdate
+            ? 'w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center'
+            : 'w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center';
+        document.getElementById('modalSubmitBtn').textContent = isUpdate ? 'Update Entry' : 'Save Entry';
+    }
+
+    function showModal() {
+        document.getElementById('entryModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEntryModal() {
+        document.getElementById('entryModal').style.display = 'none';
+        document.body.style.overflow = '';
+        ['{{ form.cow_quantity.id_for_label }}', '{{ form.buffalo_quantity.id_for_label }}'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = false;
+        });
+    }
+
+    window.addEventListener('click', function (e) {
+        const modal = document.getElementById('entryModal');
+        if (e.target === modal) closeEntryModal();
+    });
+
+    window.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeEntryModal();
+    });
+
+    // Re-open modal if there were server-side validation errors
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('entryModal');
+        if (modal && modal.dataset.hasErrors === 'true') {
+            showModal();
+        }
+    });
+</script>
+{% endblock %}

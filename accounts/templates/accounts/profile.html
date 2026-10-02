@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}My Profile - HouseSync{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-4xl mx-auto">
+    <!-- Header / Breadcrumb -->
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <a href="{% url 'home' %}" class="hover:text-blue-600 transition">Dashboard</a>
+                <span>/</span>
+                <span class="text-slate-600">Profile & Settings</span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Account Profile</h1>
+        </div>
+        <a href="{% url 'home' %}" class="inline-flex items-center px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition shadow-xs">
+            <i class="fa-solid fa-arrow-left mr-1.5 text-slate-400"></i>Back to Home
+        </a>
+    </div>
+
+    <!-- User Identity Card -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div class="flex items-center space-x-5">
+                <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-500/25 ring-4 ring-blue-50">
+                    {{ user.username|first|upper }}
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2.5">
+                        <h2 class="text-2xl font-bold text-slate-900">{{ user.username }}</h2>
+                        {% if is_admin %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <i class="fa-solid fa-shield-halved mr-1 text-amber-600 text-[10px]"></i>Admin
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            <i class="fa-solid fa-user mr-1 text-slate-400 text-[10px]"></i>Member
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Member since {{ user.date_joined|date:"F Y" }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'logout' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition duration-150">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i>Log Out
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-6 border-t border-slate-100">
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Username</span>
+                <span class="text-sm font-bold text-slate-800">{{ user.username }}</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Account Role</span>
+                <span class="text-sm font-bold {% if is_admin %}text-amber-700{% else %}text-slate-800{% endif %}">
+                    {% if is_admin %}Household Administrator{% else %}Standard Member{% endif %}
+                </span>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Registration Date</span>
+                <span class="text-sm font-bold text-slate-800">{{ user.date_joined|date:"d M Y" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- If Administrator: Household Member Management Table -->
+    {% if is_admin %}
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-50 text-amber-600 text-xs">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </span>
+                    <h2 class="text-lg font-bold text-slate-900">Manage Household Members</h2>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Promote members to Admin or revoke administrative access.</p>
+            </div>
+            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full self-start sm:self-auto">
+                {{ members|length }} Registered User{{ members|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-left">
+                <thead class="bg-slate-50/75">
+                    <tr>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Role</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date Joined</th>
+                        <th scope="col" class="py-3.5 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for m in members %}
+                    <tr class="hover:bg-slate-50/60 transition duration-150">
+                        <td class="py-4 px-6 text-sm font-medium text-slate-900 whitespace-nowrap">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-bold ring-1 ring-slate-200">
+                                    {{ m.user.username|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="font-semibold text-slate-800">{{ m.user.username }}</span>
+                                        {% if m.is_self %}
+                                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">You</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if m.user.email %}
+                                    <span class="text-xs text-slate-400">{{ m.user.email }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm whitespace-nowrap">
+                            {% if m.is_admin %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                <i class="fa-solid fa-shield-halved mr-1.5 text-amber-600 text-[10px]"></i>Admin
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                <i class="fa-solid fa-user mr-1.5 text-slate-400 text-[10px]"></i>Member
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
+                            {{ m.user.date_joined|date:"d M Y" }}
+                        </td>
+                        <td class="py-4 px-6 text-sm whitespace-nowrap text-right">
+                            {% if m.is_self %}
+                            <span class="text-xs text-slate-400 italic">Active Account</span>
+                            {% else %}
+                            <form method="post" action="{% url 'toggle_admin_status' m.user.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'profile' %}">
+                                {% if m.is_admin %}
+                                <button type="submit"
+                                        onclick="return confirm('Revoke admin access for {{ m.user.username }}? They will become a standard member.');"
+                                        class="inline-flex items-center px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition cursor-pointer">
+                                    <i class="fa-solid fa-user-minus mr-1.5 text-[11px]"></i>Revoke Admin
+                                </button>
+                                {% else %}
+                                <button type="submit"
+                                        onclick="return confirm('Grant admin privileges to {{ m.user.username }}?');"
+                                        class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer">
+                                    <i class="fa-solid fa-shield mr-1.5 text-[11px]"></i>Make Admin
+                                </button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Member Information Card -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8">
+        <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Member Permissions</h3>
+                <p class="text-sm text-slate-600 mt-1">
+                    You have a standard member account. HouseSync modules (such as daily milk tracking, quantity entry, and monthly utility billing) are restricted to household administrators.
+                </p>
+                <div class="mt-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200/60 text-xs text-slate-600">
+                    <p class="font-medium text-slate-800 mb-1"><i class="fa-solid fa-key mr-1 text-amber-500"></i>Need Admin Privileges?</p>
+                    Contact a household administrator to promote your account to Admin status.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

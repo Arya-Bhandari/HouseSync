@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Monthly Household Bills - HouseSync{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header with Month Selector -->
+  <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600">
+          <i class="fa-solid fa-receipt text-sm"></i>
+        </span>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Household Monthly Bills</h1>
+      </div>
+      <p class="text-sm text-slate-500 mt-1">Aggregated expenses across all household modules for <span class="font-semibold text-slate-700">{{ active_month_label }}</span></p>
+    </div>
+
+    <!-- Month Selector -->
+    <form method="get" class="flex items-center gap-2">
+      <select name="month" id="bill-month-select"
+        onchange="this.form.submit()"
+        class="px-3 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer">
+        {% for opt in month_options %}
+          <option value="{{ opt.month }}"
+            {% if opt.active %}selected{% endif %}
+            data-year="{{ opt.year }}">
+            {{ opt.label }}
+          </option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="year" id="bill-year-input" value="{{ year }}" />
+      <noscript>
+        <button type="submit" class="px-3 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold">Go</button>
+      </noscript>
+    </form>
+  </div>
+
+  <!-- Grand Total Banner -->
+  <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl shadow-blue-600/15 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10">
+      <span class="text-xs font-semibold text-blue-200 uppercase tracking-widest block mb-1">Total Household Spend ({{ active_month_label }})</span>
+      <div class="text-3xl sm:text-4xl font-black">
+        ₹{{ grand_total|floatformat:2 }}
+      </div>
+      <p class="text-xs text-blue-100 mt-2">Sum of active utilities and grocery billing for this month.</p>
+    </div>
+    <div class="relative z-10 flex items-center gap-3">
+      <a href="{% url 'calculate_milk_bill' %}?year={{ year }}&month={{ month }}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition shadow-sm">
+        <i class="fa-solid fa-glass-water mr-1.5"></i>Milk Breakdown
+      </a>
+      <a href="{% url 'milk_entry_list' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 backdrop-blur-md transition">
+        Milk Logs &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Module Bill Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- Active: Milk Module -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-glass-water"></i>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <i class="fa-solid fa-circle-check mr-1 text-[9px]"></i>Active
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Milk Bill</h3>
+        <p class="text-xs text-slate-500 mt-1">Daily consumption: Cow & Buffalo milk.</p>
+
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Total Volume:</span>
+            <span class="font-bold text-slate-800">{{ total_milk_liters }} Liters</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Cow ({{ total_qty_cow }}L):</span>
+            <span class="font-semibold text-slate-700">₹{{ total_price_cow|floatformat:2 }}</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Buffalo ({{ total_qty_buffalo }}L):</span>
+            <span class="font-semibold text-slate-700">₹{{ total_price_buffalo|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Subtotal</span>
+          <span class="text-xl font-extrabold text-slate-900">₹{{ total_milk_bill|floatformat:2 }}</span>
+        </div>
+        <a href="{% url 'calculate_milk_bill' %}?year={{ year }}&month={{ month }}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+          Detailed &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- Placeholder: Kirana & Groceries -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col justify-between opacity-85">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wider">
+            Coming Soon
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Kirana & Grocery</h3>
+        <p class="text-xs text-slate-500 mt-1">Household grocery expenses, rations, and store receipts.</p>
+
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-400">
+          <p>This module will automatically calculate monthly store bills and grocery totals when entries are enabled.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Subtotal</span>
+          <span class="text-xl font-bold text-slate-400">₹0.00</span>
+        </div>
+        <span class="text-xs text-slate-400 italic">In Development</span>
+      </div>
+    </div>
+
+    <!-- Placeholder: Electricity -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col justify-between opacity-85">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wider">
+            Coming Soon
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Electricity & Power</h3>
+        <p class="text-xs text-slate-500 mt-1">Meter units consumed, power tariffs, and utility bills.</p>
+
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-400">
+          <p>Meter reading logs and per-unit billing calculation will appear here once the utility module is enabled.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Subtotal</span>
+          <span class="text-xl font-bold text-slate-400">₹0.00</span>
+        </div>
+        <span class="text-xs text-slate-400 italic">In Development</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Back Link -->
+  <div class="flex justify-between items-center pt-2">
+    <a href="{% url 'home' %}" class="text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+      <i class="fa-solid fa-house text-xs"></i> Back to Home
+    </a>
+    <a href="{% url 'milk_entry_list' %}" class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1.5">
+      <i class="fa-solid fa-glass-water text-xs"></i> Milk Logs
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const sel = document.getElementById('bill-month-select');
+  const yearInput = document.getElementById('bill-year-input');
+  if (sel && yearInput) {
+    sel.addEventListener('change', function () {
+      const opt = sel.options[sel.selectedIndex];
+      yearInput.value = opt.dataset.year;
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}House Management{% endblock %}</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Play CDN for reliable styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 min-h-full flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+    <!-- Navbar -->
+    {% block navbar %}
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200/80 shadow-xs">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo & Brand -->
+          <div class="flex items-center space-x-3">
+            <a href="{% url 'home' %}" class="flex items-center space-x-2.5 group">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
+                <i class="fa-solid fa-house-chimney text-base"></i>
+              </div>
+              <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">House<span class="text-blue-600">Sync</span></span>
+            </a>
+
+            <!-- Nav Links -->
+            {% if user.is_authenticated %}
+            <nav class="hidden md:flex items-center space-x-1 ml-6 pl-6 border-l border-slate-200">
+              <a href="{% url 'home' %}" class="px-3.5 py-1.5 rounded-lg text-sm font-medium {% if request.resolver_match.url_name == 'home' %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %} transition duration-150">
+                <i class="fa-solid fa-house mr-1.5 text-xs"></i>Home
+              </a>
+              {% if is_admin %}
+              <a href="{% url 'admin_dashboard' %}" class="px-3.5 py-1.5 rounded-lg text-sm font-medium {% if 'dashboard' in request.path %}bg-amber-50 text-amber-800 font-semibold border border-amber-200/70{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %} transition duration-150">
+                <i class="fa-solid fa-chart-pie mr-1.5 text-xs text-amber-500"></i>Dashboard
+              </a>
+              {% endif %}
+              <a href="{% url 'milk_entry_list' %}" class="px-3.5 py-1.5 rounded-lg text-sm font-medium {% if 'milk' in request.path %}bg-blue-50 text-blue-700 font-semibold{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %} transition duration-150">
+                <i class="fa-solid fa-glass-water mr-1.5 text-xs"></i>Milk Logs
+              </a>
+            </nav>
+            {% endif %}
+          </div>
+
+          <!-- User Menu / Auth -->
+          <div class="flex items-center space-x-3">
+            {% if user.is_authenticated %}
+              <div class="flex items-center space-x-3">
+                <a href="{% url 'profile' %}" class="hidden sm:flex flex-col text-right group">
+                  <span class="text-xs font-semibold text-slate-800 leading-tight group-hover:text-blue-600 transition">{{ user.username|title }}</span>
+                  {% if is_admin %}
+                  <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/80 inline-block self-end mt-0.5">Admin</span>
+                  {% else %}
+                  <span class="text-[10px] font-semibold text-slate-500 inline-block self-end">Member</span>
+                  {% endif %}
+                </a>
+                <a href="{% url 'profile' %}" title="View Profile" class="w-9 h-9 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold flex items-center justify-center text-sm ring-2 ring-blue-500/20 transition">
+                  {{ user.username|first|upper }}
+                </a>
+                <a href="{% url 'logout' %}" title="Log Out" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                  <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                </a>
+              </div>
+            {% else %}
+              <a href="{% url 'login' %}" class="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5">Sign In</a>
+              <a href="{% url 'register' %}" class="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg shadow-sm shadow-blue-500/30 transition duration-150">Register</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </header>
+    {% endblock %}
+
+    <!-- Main Content Area -->
+    <main class="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto space-y-4">
+        <!-- Flash Messages -->
+        {% if messages %}
+        <div class="space-y-2">
+          {% for message in messages %}
+          <div class="p-4 rounded-2xl border text-sm flex items-center justify-between {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-800{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
+            <div class="flex items-center space-x-2.5">
+              {% if message.tags == 'error' %}
+              <i class="fa-solid fa-circle-exclamation text-rose-600"></i>
+              {% elif message.tags == 'success' %}
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              {% else %}
+              <i class="fa-solid fa-circle-info text-blue-600"></i>
+              {% endif %}
+              <span>{{ message }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200/80 bg-white/60 py-5 text-center text-xs text-slate-400">
+      <p>&copy; 2026 HouseSync Management System. Made for seamless home management.</p>
+    </footer>
+
+    {% block modals %}{% endblock %}
+
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

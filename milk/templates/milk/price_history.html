@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Milk Price History - HouseSync{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 text-amber-600">
+          <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+        </span>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Milk Price History</h1>
+      </div>
+      <p class="text-sm text-slate-500 mt-1">Full audit trail of all milk price changes.</p>
+    </div>
+    <a href="{% url 'set_milk_price' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-amber-400/30 transition">
+      <i class="fa-solid fa-plus text-xs"></i> Set New Price
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Cow Milk History -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-cow"></i>
+        </span>
+        <h2 class="text-sm font-bold text-slate-800">Cow Milk Prices</h2>
+      </div>
+      {% if cow_prices %}
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <th class="px-6 py-3 text-left">Effective From</th>
+            <th class="px-6 py-3 text-right">Price / Litre</th>
+            <th class="px-6 py-3 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for price in cow_prices %}
+          <tr class="hover:bg-slate-50/70 transition">
+            <td class="px-6 py-3.5 font-medium text-slate-700">{{ price.effective_from_date|date:"d M Y" }}</td>
+            <td class="px-6 py-3.5 text-right font-bold text-emerald-700">₹{{ price.price_per_litre }}</td>
+            <td class="px-6 py-3.5 text-center">
+              {% if forloop.first %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Current
+                </span>
+              {% else %}
+                <span class="text-xs text-slate-400">Past</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="px-6 py-10 text-center text-slate-400">
+        <i class="fa-solid fa-cow text-3xl mb-3 opacity-30"></i>
+        <p class="text-sm">No cow milk prices set yet.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Buffalo Milk History -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-shield"></i>
+        </span>
+        <h2 class="text-sm font-bold text-slate-800">Buffalo Milk Prices</h2>
+      </div>
+      {% if buffalo_prices %}
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <th class="px-6 py-3 text-left">Effective From</th>
+            <th class="px-6 py-3 text-right">Price / Litre</th>
+            <th class="px-6 py-3 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for price in buffalo_prices %}
+          <tr class="hover:bg-slate-50/70 transition">
+            <td class="px-6 py-3.5 font-medium text-slate-700">{{ price.effective_from_date|date:"d M Y" }}</td>
+            <td class="px-6 py-3.5 text-right font-bold text-indigo-700">₹{{ price.price_per_litre }}</td>
+            <td class="px-6 py-3.5 text-center">
+              {% if forloop.first %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span> Current
+                </span>
+              {% else %}
+                <span class="text-xs text-slate-400">Past</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="px-6 py-10 text-center text-slate-400">
+        <i class="fa-solid fa-shield text-3xl mb-3 opacity-30"></i>
+        <p class="text-sm">No buffalo milk prices set yet.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Back link -->
+  <div class="flex justify-end">
+    <a href="{% url 'milk_entry_list' %}" class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1.5">
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to Milk Logs
+    </a>
+  </div>
+
+</div>
+{% endblock %}

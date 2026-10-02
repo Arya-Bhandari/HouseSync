@@ -1,0 +1,132 @@
+{% extends 'base.html' %} 
+{% block title %}Home - HouseSync{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Welcome Banner -->
+    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-3xl p-8 sm:p-10 text-white shadow-xl shadow-blue-500/15 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative z-10 max-w-xl">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-md mb-4 text-blue-50">
+                {% if is_admin %}
+                <i class="fa-solid fa-shield-halved mr-1.5 text-amber-300"></i> Administrator Account
+                {% else %}
+                <i class="fa-solid fa-user mr-1.5 text-blue-200"></i> Household Member
+                {% endif %}
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Welcome, {{ user.username|title }}!</h1>
+            <p class="text-blue-100 text-sm sm:text-base mt-2">
+                Manage daily utilities, log milk entries, track household consumption, and stay organized in one unified place.
+            </p>
+        </div>
+    </div>
+
+    <!-- ─── MODULES & TRACKERS (Visible to All Users) ─── -->
+    <div>
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+                <h2 class="text-lg font-bold text-slate-900">Household Modules</h2>
+            </div>
+            <span class="text-xs text-slate-500">Available utilities</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Milk Tracker Card (Visible to all) -->
+            <a href="{% url 'milk_entry_list' %}" class="group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-blue-200 transition-all duration-200 transform hover:-translate-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-200 shadow-sm">
+                    <i class="fa-solid fa-glass-water"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition">Milk Tracker</h3>
+                    <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition duration-150 text-sm"></i>
+                </div>
+                <p class="text-sm text-slate-500 mt-2">Daily Cow & Buffalo milk logging, quantity summaries, and monthly billing.</p>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-400">
+                    <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Active</span>
+                    <span>Open Tracker &rarr;</span>
+                </div>
+            </a>
+
+            <!-- Kirana / Grocery Card (Visible to all) -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:border-emerald-200 transition duration-200 opacity-90">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-900">Kirana & Groceries</h3>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Soon</span>
+                </div>
+                <p class="text-sm text-slate-500 mt-2">Track everyday household groceries, items, and monthly store expenses.</p>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-400">
+                    <span>In Development</span>
+                </div>
+            </div>
+
+            <!-- Electricity Card (Visible to all) -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:border-amber-200 transition duration-200 opacity-90">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-900">Electricity</h3>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Soon</span>
+                </div>
+                <p class="text-sm text-slate-500 mt-2">Monitor meter readings, power units consumed, and track utility bills.</p>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-400">
+                    <span>In Development</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── ADMIN ONLY SECTION: DASHBOARD MODULE & CONTROLS ─── -->
+    {% if is_admin %}
+    <div class="pt-2 border-t border-slate-200/60">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-amber-50 text-amber-600 text-xs">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                <h2 class="text-lg font-bold text-slate-900">Admin Modules & Controls</h2>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Admin Only</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Dedicated Dashboard Module Card -->
+            <a href="{% url 'admin_dashboard' %}" class="group bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl text-white shadow-md hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 relative overflow-hidden border border-slate-700">
+                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-400/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-200">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold group-hover:text-amber-300 transition">Executive Dashboard</h3>
+                    <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-amber-300 group-hover:translate-x-1 transition duration-150 text-sm"></i>
+                </div>
+                <p class="text-sm text-slate-300 mt-2">Executive analytics, monthly expense summaries, volume totals, and household KPI overview.</p>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs font-medium text-slate-400">
+                    <span class="text-amber-400 font-bold"><i class="fa-solid fa-lock-open mr-1"></i>Admin Access</span>
+                    <span class="text-white group-hover:text-amber-300">Open Dashboard &rarr;</span>
+                </div>
+            </a>
+
+            <!-- Manage Members Card -->
+            <a href="{% url 'dashboard_members' %}" class="group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-amber-200 transition-all duration-200 transform hover:-translate-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-200">
+                    <i class="fa-solid fa-users-gear"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-900 group-hover:text-amber-700 transition">Manage Household Members</h3>
+                    <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-amber-600 group-hover:translate-x-1 transition duration-150 text-sm"></i>
+                </div>
+                <p class="text-sm text-slate-500 mt-2">View family accounts, review registered users, and grant or revoke administrator privileges.</p>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-400">
+                    <span class="text-slate-600 font-semibold"><i class="fa-solid fa-user-shield mr-1"></i>Role Management</span>
+                    <span class="text-blue-600">Member Settings &rarr;</span>
+                </div>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

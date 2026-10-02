@@ -1,0 +1,199 @@
+{% extends 'dashboard/dashboard_base.html' %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+    <!-- KPI Metric Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Metric 1: Monthly Bill Estimate -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Bill ({{ today|date:"M" }})</span>
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                ₹{{ total_bill|floatformat:2 }}
+            </div>
+            <div class="mt-2 flex items-center text-xs text-slate-500">
+                <a href="{% url 'dashboard_milk' %}" class="text-blue-600 hover:text-blue-700 font-semibold flex items-center">
+                    Manage milk rates & bills <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Metric 2: Total Volume -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Milk Volume</span>
+                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-glass-water"></i>
+                </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                {{ total_liters|floatformat:2 }} <span class="text-sm font-medium text-slate-400">Liters</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 flex items-center space-x-2">
+                <span class="text-emerald-700 font-medium">Cow: {{ total_qty_cow|floatformat:1 }}L</span>
+                <span>•</span>
+                <span class="text-indigo-700 font-medium">Buffalo: {{ total_qty_buffalo|floatformat:1 }}L</span>
+            </div>
+        </div>
+
+        <!-- Metric 3: Logged Entries Count -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Month Entries</span>
+                <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm">
+                    <i class="fa-regular fa-calendar-check"></i>
+                </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                {{ entries_count }} <span class="text-sm font-medium text-slate-400">Records</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-500">
+                Logged during {{ month_name }}
+            </div>
+        </div>
+
+        <!-- Metric 4: Members & Roles -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Household Users</span>
+                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                {{ total_users }} <span class="text-sm font-medium text-slate-400">Total</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 flex items-center space-x-2">
+                <span class="text-amber-700 font-bold">{{ total_admins }} Admin{{ total_admins|pluralize }}</span>
+                <span>•</span>
+                <span>{{ total_members }} Member{{ total_members|pluralize }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Entries Feed (2 cols) -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Recent Milk Activity</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Latest daily milk quantities logged across all members</p>
+                </div>
+                <a href="{% url 'milk_entry_list' %}" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
+                    View All &rarr;
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-100 text-left text-sm">
+                    <thead class="bg-slate-50/75 text-xs text-slate-500 uppercase font-semibold">
+                        <tr>
+                            <th class="py-3 px-6">Date</th>
+                            <th class="py-3 px-6">Type</th>
+                            <th class="py-3 px-6">Quantity</th>
+                            <th class="py-3 px-6">Note</th>
+                            <th class="py-3 px-6">Logged By</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for entry in recent_entries %}
+                        <tr class="hover:bg-slate-50/60 transition">
+                            <td class="py-3.5 px-6 font-medium text-slate-900 whitespace-nowrap">
+                                {{ entry.date|date:"D, d M Y" }}
+                            </td>
+                            <td class="py-3.5 px-6 whitespace-nowrap">
+                                {% if entry.milk_type == 'cow' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                                    <i class="fa-solid fa-cow mr-1 text-[10px]"></i>Cow
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                    <i class="fa-solid fa-shield mr-1 text-[10px]"></i>Buffalo
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-6 font-semibold text-slate-800 whitespace-nowrap">
+                                {{ entry.get_quantity_litres_display }}
+                            </td>
+                            <td class="py-3.5 px-6 text-slate-500 text-xs">
+                                {% if entry.note %}
+                                <span class="text-amber-700 font-medium truncate max-w-xs block">{{ entry.note }}</span>
+                                {% else %}
+                                <span class="text-slate-300">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-6 text-slate-600 text-xs whitespace-nowrap">
+                                <span class="font-medium">{{ entry.logged_by.username|default:"System" }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
+                                No recent milk entries found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Household Members & Administrative Controls (1 col) -->
+        <div class="space-y-6">
+            <!-- Members Quick View Card -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900">Family Members</h3>
+                    <a href="{% url 'dashboard_members' %}" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
+                        Manage &rarr;
+                    </a>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    {% for u in recent_users %}
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 border border-slate-200/60">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs">
+                                {{ u.username|first|upper }}
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-800 block">{{ u.username }}</span>
+                                <span class="text-[10px] text-slate-400">Joined {{ u.date_joined|date:"d M Y" }}</span>
+                            </div>
+                        </div>
+                        {% if u.profile.is_admin or u.is_superuser %}
+                        <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Admin</span>
+                        {% else %}
+                        <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">Member</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-5 pt-4 border-t border-slate-100">
+                    <a href="{% url 'dashboard_members' %}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition shadow-xs">
+                        <i class="fa-solid fa-user-shield mr-2"></i>Manage Roles & Permissions
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Info / Help Card -->
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50/60 rounded-2xl border border-blue-200/60 p-6 text-xs text-blue-900 space-y-2">
+                <div class="flex items-center space-x-2 font-bold text-blue-950">
+                    <i class="fa-solid fa-circle-info text-blue-600"></i>
+                    <span>Admin Controls Hub</span>
+                </div>
+                <p class="text-slate-600 leading-relaxed">
+                    Use the tabs above to manage <strong>Milk Management</strong> (set rates, review price history, audit monthly bills) or administer <strong>Household Members</strong>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

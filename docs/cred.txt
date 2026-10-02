@@ -1,0 +1,7 @@
+User: Arya_Bhandari
+Pass: arya@123
+admin: True
+
+user: Indira_Bhandari
+Pass: indira123456
+admin: False
